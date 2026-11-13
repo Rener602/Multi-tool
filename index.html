@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#121212">
+<title>Multi-tool</title>
+<style>
+  :root { --bg: #121212; --card: #1e1e1e; --text: #ffffff; --muted: #a0a0a0; --border: #333; --accent: #0a84ff; --input: #2c2c2c; }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, sans-serif; }
+  body { background: var(--bg); color: var(--text); padding-bottom: 20px; }
+  header { background: var(--card); padding: 15px; text-align: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+  header h1 { font-size: 18px; }
+  .tabs { display: flex; overflow-x: auto; background: var(--card); padding: 10px; gap: 8px; border-bottom: 1px solid var(--border); }
+  .tabs button { flex: 1; white-space: nowrap; padding: 10px 15px; background: var(--input); border: none; border-radius: 8px; color: var(--text); font-weight: 600; cursor: pointer; font-size: 13px; }
+  .tabs button.active { background: var(--accent); color: white; }
+  .container { padding: 20px; }
+  .tool { display: none; background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid var(--border); }
+  .tool.active { display: block; }
+  h2 { font-size: 20px; margin-bottom: 15px; }
+  input, button { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--input); color: white; font-size: 16px; }
+  button { background: var(--accent); border: none; font-weight: bold; cursor: pointer; }
+  button:active { opacity: 0.8; }
+  .result { font-size: 24px; font-weight: bold; text-align: center; margin-top: 20px; color: #30d158; }
+  .timer-display { font-size: 48px; text-align: center; font-weight: bold; margin: 20px 0; }
+</style>
+</head>
+<body>
+<header><h1>🛠️ Multi-tool</h1></header>
+<div class="tabs">
+  <button class="active" onclick="openTool('pomodoro', this)">🍅 Таймер</button>
+  <button onclick="openTool('password', this)">🔐 Пароль</button>
+  <button onclick="openTool('dice', this)">🎲 Кубик</button>
+  <button onclick="openTool('tip', this)">💸 Чаевые</button>
+  <button onclick="openTool('bmi', this)">⚖️ ИМТ</button>
+</div>
+<div class="container">
+  <div id="pomodoro" class="tool active"><h2>🍅 Таймер 25 мин</h2><div class="timer-display" id="timerDisplay">25:00</div><button onclick="startTimer()">Старт / Пауза</button><button onclick="resetTimer()" style="background: #333;">Сброс</button></div>
+  <div id="password" class="tool"><h2>🔐 Генератор</h2><input type="number" id="passLength" value="12"><button onclick="generatePassword()">Создать</button><div class="result" id="passwordResult" style="word-break: break-all;"></div></div>
+  <div id="dice" class="tool"><h2>🎲 Кубик</h2><div class="result" id="diceResult" style="font-size: 60px;">⚀</div><button onclick="rollDice()">Бросить</button></div>
+  <div id="tip" class="tool"><h2>💸 Чаевые</h2><input type="number" id="billAmount" placeholder="Сумма"><input type="number" id="tipPercent" value="10"><button onclick="calculateTip()">Посчитать</button><div class="result" id="tipResult"></div></div>
+  <div id="bmi" class="tool"><h2>⚖️ ИМТ</h2><input type="number" id="weight" placeholder="Вес (кг)"><input type="number" id="height" placeholder="Рост (см)"><button onclick="calculateBMI()">Посчитать</button><div class="result" id="bmiResult"></div></div>
+</div>
+<script>
+  function openTool(id, btn) {
+    document.querySelectorAll('.tool').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+  let timeLeft = 1500; let timerId = null; let isRunning = false;
+  function updateTimerDisplay() { const m = Math.floor(timeLeft / 60).toString().padStart(2, '0'); const s = (timeLeft % 60).toString().padStart(2, '0'); document.getElementById('timerDisplay').textContent = `${m}:${s}`; }
+  function startTimer() { if (isRunning) { clearInterval(timerId); isRunning = false; } else { isRunning = true; timerId = setInterval(() => { if (timeLeft > 0) { timeLeft--; updateTimerDisplay(); } else { clearInterval(timerId); isRunning = false; alert('Время вышло!'); } }, 1000); } }
+  function resetTimer() { clearInterval(timerId); isRunning = false; timeLeft = 1500; updateTimerDisplay(); }
+  function generatePassword() { const len = parseInt(document.getElementById('passLength').value) || 12; const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*"; let pass = ""; for (let i = 0; i < len; i++) pass += chars.charAt(Math.floor(Math.random() * chars.length)); document.getElementById('passwordResult').textContent = pass; }
+  function rollDice() { const f = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']; document.getElementById('diceResult').textContent = f[Math.floor(Math.random() * 6)]; }
+  function calculateTip() { const b = parseFloat(document.getElementById('billAmount').value); const p = parseFloat(document.getElementById('tipPercent').value); if (isNaN(b) || isNaN(p)) return; const t = b * (p / 100); document.getElementById('tipResult').innerHTML = `Чаевые: ${t.toFixed(0)} ₽<br>Итого: ${(b+t).toFixed(0)} ₽`; }
+  function calculateBMI() { const w = parseFloat(document.getElementById('weight').value); const h = parseFloat(document.getElementById('height').value) / 100; if (isNaN(w) || isNaN(h) || h === 0) return; const bmi = (w / (h * h)).toFixed(1); let s = ''; if (bmi < 18.5) s = 'Недостаток'; else if (bmi < 25) s = 'Норма'; else if (bmi < 30) s = 'Избыток'; else s = 'Ожирение'; document.getElementById('bmiResult').innerHTML = `${bmi} — ${s}`; }
+</script>
+</body>
+</html>

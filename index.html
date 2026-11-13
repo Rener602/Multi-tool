@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Multi-tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #09090b;
+            --bg-glass: rgba(255, 255, 255, 0.04);
+            --bg-glass-hover: rgba(255, 255, 255, 0.08);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --accent-1: #7c3aed;
+            --accent-2: #db2777;
+            --accent-3: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --radius-sm: 12px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-pill: 50px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Background Glowing Blobs */
+        .bg-blobs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        .blob-1 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent-1);
+            top: -50px;
+            left: -50px;
+            animation-delay: 0s;
+        }
+
+        .blob-2 {
+            width: 250px;
+            height: 250px;
+            background: var(--accent-2);
+            top: 40%;
+            right: -80px;
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            width: 350px;
+            height: 350px;
+            background: var(--accent-3);
+            bottom: -100px;
+            left: 20%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        /* App Container */
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            padding: 20px;
+            padding-bottom: 40px;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .app-header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-top: 20px;
+        }
+
+        .app-header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .app-header p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Navigation Tabs */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 6px;
+            margin: 0 -6px 24px -6px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        .nav-tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab-btn {
+            flex-shrink: 0;
+            padding: 10px 18px;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-glass);
+            background: var(--bg-glass);
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .tab-btn:active {
+            transform: scale(0.95);
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
+            font-weight: 600;
+        }
+
+        /* Content Sections */
+        .content-area {
+            flex: 1;
+        }
+
+        .tool-section {
+            display: none;
+            animation: fadeSlideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .tool-section.active {
+            display: block;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title .icon {
+            font-size: 24px;
+        }
+
+        /* Form Elements */
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .input-field:focus {
+            border-color: var(--accent-1);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        }
+
+        .input-field::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            border: 1px solid var(--border-glass);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-row .btn {
+            flex: 1;
+        }
+
+        /* Pomodoro Specific */
+        .timer-display {
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        .timer-time {
+            font-size: 72px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.6) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .timer-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Password Specific */
+        .password-output {
+            width: 100%;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-sm);
+            color: #10b981;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            word-break: break-all;
+            min-height: 54px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .copy-feedback {
+            font-size: 12px;
+            color: var(--success);
+            text-align: center;
+            margin-top: 8px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .copy-feedback.show {
+            opacity: 1;
+        }
+
+        /* Dice Specific */
+        .dice-container {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .dice-face {
+            font-size: 100px;
+            display: inline-block;
+            transition: transform 0.1s;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+        }
+
+        .dice-face.rolling {
+            animation: rollDice 0.6s ease-in-out;
+        }
+
+        @keyframes rollDice {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.2); }
+            50% { transform: rotate(180deg) scale(0.9); }
+            75% { transform: rotate(270deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .dice-result {
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 16px;
+            color: var(--text-secondary);
+        }
+
+        /* Results / Output Blocks */
+        .result-block {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .result-block.show {
+            display: block;
+            animation: fadeSlideUp 0.3s ease forwards;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+
+        .result-row:not(:last-child) {
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .result-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .result-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .bmi-status {
+            text-align: center;
+            padding: 16px;
+            border-radius: var(--radius-sm);
+            margin-top: 16px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .bmi-value-display {
+            font-size: 48px;
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        /* Utility */
+        .mt-16 { margin-top: 16px; }
+        .mb-16 { margin-bottom: 16px; }
+        
+        /* Scrollbar for inputs */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Background Blobs -->
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- App Container -->
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header class="app-header">
+            <h1>Multi-tool</h1>
+            <p>Набор полезных инструментов</p>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav-tabs" id="navTabs">
+            <button class="tab-btn active" data-target="pomodoro">🍅 Помодоро</button>
+            <button class="tab-btn" data-target="password">🔐 Пароли</button>
+            <button class="tab-btn" data-target="dice">🎲 Кубик</button>
+            <button class="tab-btn" data-target="tip">💸 Чаевые</button>
+            <button class="tab-btn" data-target="bmi">⚖️ ИМТ</button>
+        </nav>
+
+        <!-- Content Area -->
+        <main class="content-area">
+
+            <!-- 1. Pomodoro Timer -->
+            <section class="tool-section active" id="pomodoro">
+                <div class="glass-card">
+                    <div class="card-title"><span class="icon">🍅</span> Помодоро-таймер</div>
+                    <div class="timer-display">
+                        <div class="timer-time" id="timerDisplay">25:00</div>
+                        <div class="timer-label">Фокус</div>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn btn-primary" id="timerStartBtn">Старт</button>
+                        <button class="btn btn-secondary" id="timerResetBtn">Сброс</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Password Generator -->
+            <section class="tool-section" id="password">
+                <div class="glass-card">
+                    <div class="card-title"><span class="icon">🔐</span> Генератор паролей</div>
+                    <div class="input-group">
+                        <label>Длина пароля</label>
+                        <input type="number" class="input-field" id="passLength" value="16" min="4" max="64">
+                    </div>
+                    <button class="btn btn-primary mb-16" id="genPassBtn">Сгенерировать</button>
+                    <div class="password-output" id="passOutput">Нажмите кнопку...</div>
+                    <button class="btn btn-secondary" id="copyPassBtn">📋 Копировать</button>
+                    <div class="copy-feedback" id="copyFeedback">Скопировано в буфер обмена!</div>
+                </div>
+            </section>
+
+            <!-- 3. Dice Roller -->
+            <section class="tool-section" id="dice">
+                <div class="glass-card">
+                    <div class="card-title"><span class="icon">🎲</span> Бросок кубика</div>
+                    <div class="dice-container">
+                        <div class="dice-face" id="diceFace">⚀</div>
+                        <div class="dice-result" id="diceResult">Нажмите, чтобы бросить</div>
+                    </div>
+                    <button class="btn btn-primary" id="rollDiceBtn">Бросить кубик</button>
+                </div>
+            </section>
+
+            <!-- 4. Tip Calculator -->
+            <section class="tool-section" id="tip">
+                <div class="glass-card">
+                    <div class="card-title"><span class="icon">💸</span> Калькулятор чаевых</div>
+                    <div class="input-group">
+                        <label>Сумма счета</label>
+                        <input type="number" class="input-field" id="tipBill" placeholder="0.00" step="0.01">
+                    </div>
+                    <div class="input-group">
+                        <label>Процент чаевых (%)</label>
+                        <input type="number" class="input-field" id="tipPercent" placeholder="15" value="15">
+                    </div>
+                    <button class="btn btn-primary" id="calcTipBtn">Посчитать</button>
+                    
+                    <div class="result-block" id="tipResult">
+                        <div class="result-row">
+                            <span class="result-label">Сумма чаевых</span>
+                            <span class="result-value" id="tipAmount">0.00</span>
+                        </div>
+                        <div class="result-row">
+                            <span class="result-label">Итого к оплате</span>
+                            <span class="result-value" id="tipTotal" style="color: #10b981;">0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. BMI Calculator -->
+            <section class="tool-section" id="bmi">
+                <div class="glass-card">
+                    <div class="card-title"><span class="icon">⚖️</span> Калькулятор ИМТ</div>
+                    <div class="input-group">
+                        <label>Вес (кг)</label>
+                        <input type="number" class="input-field" id="bmiWeight" placeholder="70" step="0.1">
+                    </div>
+                    <div class="input-group">
+                        <label>Рост (см)</label>
+                        <input type="number" class="input-field" id="bmiHeight" placeholder="175">
+                    </div>
+                    <button class="btn btn-primary" id="calcBmiBtn">Посчитать</button>
+                    
+                    <div class="result-block" id="bmiResult">
+                        <div class="bmi-value-display" id="bmiValue">0.0</div>
+                        <div class="bmi-status" id="bmiStatus">Введите данные</div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // ==========================================
+        // Navigation Logic
+        // ==========================================
+        const tabs = document.querySelectorAll('.tab-btn');
+        const sections = document.querySelectorAll('.tool-section');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.getAttribute('data-target');
+                
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                sections.forEach(s => {
+                    s.classList.remove('active');
+                    if (s.id === target) {
+                        s.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // ==========================================
+        // 1. Pomodoro Timer
+        // ==========================================
+        let pomodoroTime = 25 * 60;
+        let pomodoroInterval = null;
+        let isRunning = false;
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerStartBtn = document.getElementById('timerStartBtn');
+        const timerResetBtn = document.getElementById('timerResetBtn');
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(pomodoroTime / 60);
+            const secs = pomodoroTime % 60;
+            timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function playBeep() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 800;
+                gainNode.gain.value = 0.5;
+                
+                oscillator.start();
+                
+                setTimeout(() => {
+                    oscillator.stop();
+                    audioCtx.close();
+                }, 300);
+            } catch (e) {
+                alert('Время вышло!');
+            }
+        }
+
+        timerStartBtn.addEventListener('click', () => {
+            if (!isRunning) {
+                isRunning = true;
+                timerStartBtn.textContent = 'Пауза';
+                pomodoroInterval = setInterval(() => {
+                    pomodoroTime--;
+                    updateTimerDisplay();
+                    if (pomodoroTime <= 0) {
+                        clearInterval(pomodoroInterval);
+                        isRunning = false;
+                        timerStartBtn.textContent = 'Старт';
+                        playBeep();
+                        setTimeout(() => alert('Время вышло! Пора сделать перерыв!'), 100);
+                    }
+                }, 1000);
+            } else {
+                isRunning = false;
+                timerStartBtn.textContent = 'Старт';
+                clearInterval(pomodoroInterval);
+            }
+        });
+
+        timerResetBtn.addEventListener('click', () => {
+            clearInterval(pomodoroInterval);
+            isRunning = false;
+            pomodoroTime = 25 * 60;
+            updateTimerDisplay();
+            timerStartBtn.textContent = 'Старт';
+        });
+
+        // ==========================================
+        // 2. Password Generator
+        // ==========================================
+        const passLengthInput = document.getElementById('passLength');
+        const genPassBtn = document.getElementById('genPassBtn');
+        const passOutput = document.getElementById('passOutput');
+        const copyPassBtn = document.getElementById('copyPassBtn');
+        const copyFeedback = document.getElementById('copyFeedback');
+
+        function generatePassword(length) {
+            const lower = 'abcdefghijklmnopqrstuvwxyz';
+            const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const numbers = '0123456789';
+            const symbols = '!@#$%^&*()_+~`|}{[]:;?><,./-=';
+            const all = lower + upper + numbers + symbols;
+            
+            let password = '';
+            // Ensure at least one of each type
+            password += lower[Math.floor(Math.random() * lower.length)];
+            password += upper[Math.floor(Math.random() * upper.length)];
+            password += numbers[Math.floor(Math.random() * numbers.length)];
+            password += symbols[Math.floor(Math.random() * symbols.length)];
+            
+            for (let i = 4; i < length; i++) {
+                password += all[Math.floor(Math.random() * all.length)];
+            }
+            
+            // Shuffle
+            return password.split('').sort(() => Math.random() - 0.5).join('');
+        }
+
+        genPassBtn.addEventListener('click', () => {
+            const length = parseInt(passLengthInput.value) || 16;
+            passOutput.textContent = generatePassword(length);
+        });
+
+        copyPassBtn.addEventListener('click', () => {
+            const text = passOutput.textContent;
+            if (text && text !== 'Нажмите кнопку...') {
+                navigator.clipboard.writeText(text).then(() => {
+                    copyFeedback.classList.add('show');
+                    setTimeout(() => copyFeedback.classList.remove('show'), 2000);
+                }).catch(() => {
+                    // Fallback
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    copyFeedback.classList.add('show');
+                    setTimeout(() => copyFeedback.classList.remove('show'), 2000);
+                });
+            }
+        });
+
+        // ==========================================
+        // 3. Dice Roller
+        // ==========================================
+        const diceFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+        const diceFaceEl = document.getElementById('diceFace');
+        const diceResultEl = document.getElementById('diceResult');
+        const rollDiceBtn = document.getElementById('rollDiceBtn');
+
+        rollDiceBtn.addEventListener('click', () => {
+            diceFaceEl.classList.add('rolling');
+            diceResultEl.textContent = '...';
+            
+            // Rapidly change faces during animation
+            let counter = 0;
+            const animInterval = setInterval(() => {
+                diceFaceEl.textContent = diceFaces[Math.floor(Math.random() * 6)];
+                counter++;
+                if (counter > 8) {
+                    clearInterval(animInterval);
+                    const finalRoll = Math.floor(Math.random() * 6);
+                    diceFaceEl.textContent = diceFaces[finalRoll];
+                    diceFaceEl.classList.remove('rolling');
+                    diceResultEl.textContent = `Выпало: ${finalRoll + 1}`;
+                }
+            }, 70);
+        });
+
+        // ==========================================
+        // 4. Tip Calculator
+        // ==========================================
+        const tipBillInput = document.getElementById('tipBill');
+        const tipPercentInput = document.getElementById('tipPercent');
+        const calcTipBtn = document.getElementById('calcTipBtn');
+        const tipResultBlock = document.getElementById('tipResult');
+        const tipAmountEl = document.getElementById('tipAmount');
+        const tipTotalEl = document.getElementById('tipTotal');
+
+        calcTipBtn.addEventListener('click', () => {
+            const bill = parseFloat(tipBillInput.value);
+            const percent = parseFloat(tipPercentInput.value);
+            
+            if (isNaN(bill) || isNaN(percent) || bill < 0) {
+                alert('Пожалуйста, введите корректные данные');
+                return;
+            }
+            
+            const tipAmount = bill * (percent / 100);
+            const total = bill + tipAmount;
+            
+            tipAmountEl.textContent = `${tipAmount.toFixed(2)}`;
+            tipTotalEl.textContent = `${total.toFixed(2)}`;
+            tipResultBlock.classList.add('show');
+        });
+
+        // ==========================================
+        // 5. BMI Calculator
+        // ==========================================
+        const bmiWeightInput = document.getElementById('bmiWeight');
+        const bmiHeightInput = document.getElementById('bmiHeight');
+        const calcBmiBtn = document.getElementById('calcBmiBtn');
+        const bmiResultBlock = document.getElementById('bmiResult');
+        const bmiValueEl = document.getElementById('bmiValue');
+        const bmiStatusEl = document.getElementById('bmiStatus');
+
+        calcBmiBtn.addEventListener('click', () => {
+            const weight = parseFloat(bmiWeightInput.value);
+            const heightCm = parseFloat(bmiHeightInput.value);
+            
+            if (isNaN(weight) || isNaN(heightCm) || weight <= 0 || heightCm <= 0) {
+                alert('Пожалуйста, введите корректные данные');
+                return;
+            }
+            
+            const heightM = heightCm / 100;
+            const bmi = weight / (heightM * heightM);
+            const bmiRounded = bmi.toFixed(1);
+            
+            bmiValueEl.textContent = bmiRounded;
+            
+            let statusText = '';
+            let statusColor = '';
+            let statusBg = '';
+            
+            if (bmi < 18.5) {
+                statusText = 'Недостаток веса';
+                statusColor = '#3b82f6';
+                statusBg = 'rgba(59, 130, 246, 0.15)';
+            } else if (bmi < 25) {
+                statusText = 'Норма';
+                statusColor = '#10b981';
+                statusBg = 'rgba(16, 185, 129, 0.15)';
+            } else if (bmi < 30) {
+                statusText = 'Избыток веса';
+                statusColor = '#f59e0b';
+                statusBg = 'rgba(245, 158, 11, 0.15)';
+            } else {
+                statusText = 'Ожирение';
+                statusColor = '#ef4444';
+                statusBg = 'rgba(239, 68, 68, 0.15)';
+            }
+            
+            bmiValueEl.style.color = statusColor;
+            bmiStatusEl.textContent = statusText;
+            bmiStatusEl.style.color = statusColor;
+            bmiStatusEl.style.backgroundColor = statusBg;
+            bmiStatusEl.style.border = `1px solid ${statusColor}33`;
+            
+            bmiResultBlock.classList.add('show');
+        });
+
+    </script>
+</body>
+                          </html>
+                          
